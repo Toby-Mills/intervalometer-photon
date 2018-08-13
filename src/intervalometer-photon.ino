@@ -4,6 +4,7 @@
  * Author:
  * Date:
  */
+char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon"
 
 int shutterPin = D7;
 int LEDPin = D5;
@@ -35,7 +36,16 @@ pinMode(LEDPin, OUTPUT);
 
 // loop() runs over and over again, as quickly as it can execute.
 void loop() {
-  // The core of your code will likely live here.
+
+  //code to register cloud functions once the particle is connected
+  if (connectedOnce == false) {
+    if (Particle.connected()) {
+      //Register variables and methods to allow control via Particle Cloud
+      Particle.variable("sourceCode", sourceCode, STRING);
+      connectedOnce = true;
+    }
+  }
+
   switch(currentMode){
     case None:
       if(millis() - lastPhotoStartTime > photoIntervalSeconds * 1000){
