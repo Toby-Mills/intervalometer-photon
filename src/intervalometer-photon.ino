@@ -68,7 +68,8 @@ void loop() {
 
   switch(currentPhase){
     case None:
-      if(millis() - lastPhotoStartTime > photoIntervalSeconds * 1000){
+      if(millis() - lastPhotoStartTime >= photoIntervalSeconds * 1000){
+        lastPhotoStartTime = millis();
         if (bracketExposureLengthMillis > 0){
           currentBracketShot = UnderExposed;
         }
