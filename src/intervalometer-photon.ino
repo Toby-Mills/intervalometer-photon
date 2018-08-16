@@ -4,19 +4,20 @@
  * Author:
  * Date:
  */
-char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon"
+char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 
-int shutterPin = D7;
-int LEDPin = D5;
+int shutterPin = D1;
+int LEDPin = D7;
 
 // user settings
-int photoIntervalSeconds = 30;
+int photoIntervalSeconds = 15;
 bool mirrorLockupDelay = true;
 bool blackFrameEnabled = true;
-int exposureLengthMillis = 1;
+int exposureLengthMillis = 3000;
 int bracketExposureLengthMillis = 0;
 
 // internal variables
+bool connectedOnce = false;
 enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
 enum CameraMode {None, MirrorLockupDelay, Exposure, BlackFrameDelay, Processing};
 CameraMode currentMode = None;
@@ -24,14 +25,14 @@ int lastPhotoStartTime = 0;
 int currentModeStartTime = 0;
 ExposureBracketShot currentBracketShot = Exposed;
 int currentBracketExposureDuration = 0;
-int mirrorLockupDuration = 1000;
+int mirrorLockupDuration = 500;
 int processingDuration = 300;
 
 // setup() runs once, when the device is first turned on.
 void setup() {
   // Put initialization like pinMode and begin functions here.
-pinMode(shutterPin, OUTPUT);
-pinMode(LEDPin, OUTPUT);
+  pinMode(shutterPin, OUTPUT);
+  pinMode(LEDPin, OUTPUT);
 }
 
 // loop() runs over and over again, as quickly as it can execute.
