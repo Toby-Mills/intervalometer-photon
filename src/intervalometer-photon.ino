@@ -55,6 +55,13 @@ void loop() {
     if (Particle.connected()) {
       //Register variables and methods to allow control via Particle Cloud
       Particle.variable("sourceCode", sourceCode, STRING);
+      Particle.variable("interval", photoIntervalSeconds);
+      Particle.variable("lockup", mirrorLockupDelay);
+      Particle.variable("blackFrame", blackFrameEnabled);
+      Particle.variable("exposure", exposureLengthMillis);
+      Particle.variable("bracket", bracketExposureLengthMillis);
+      Particle.variable("phaseStart", currentPhaseStartTime);
+      Particle.variable("phase", currentPhase);
       connectedOnce = true;
     }
   }
