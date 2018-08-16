@@ -19,20 +19,32 @@ int bracketExposureLengthMillis = 0;
 // internal variables
 bool connectedOnce = false;
 enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
-enum CameraMode {None, MirrorLockupDelay, Exposure, BlackFrameDelay, Processing};
-CameraMode currentMode = None;
+enum PhotoPhase {None = 0, MirrorLockupDelay = 1, MirrorLockupBuffer = 2, Exposure = 3, BlackFrameDelay = 4, Processing = 5};
+PhotoPhase currentPhase = None;
 int lastPhotoStartTime = 0;
-int currentModeStartTime = 0;
+int currentPhaseStartTime = 0;
 ExposureBracketShot currentBracketShot = Exposed;
 int currentBracketExposureDuration = 0;
 int mirrorLockupDuration = 500;
+int mirrorLockupBuffer = 1000;
 int processingDuration = 300;
+
+void setPhase(PhotoPhase value){
+  currentPhase = value;
+  currentPhaseStartTime = -1;//indicates that the phase has not started yet
+}
+
+void setShutter(int value){
+  digitalWrite(shutterPin, value);
+  digitalWrite(LEDPin, value);
+}
 
 // setup() runs once, when the device is first turned on.
 void setup() {
   // Put initialization like pinMode and begin functions here.
   pinMode(shutterPin, OUTPUT);
   pinMode(LEDPin, OUTPUT);
+  setPhase(None);
 }
 
 // loop() runs over and over again, as quickly as it can execute.
@@ -47,34 +59,46 @@ void loop() {
     }
   }
 
-  switch(currentMode){
+  switch(currentPhase){
     case None:
       if(millis() - lastPhotoStartTime > photoIntervalSeconds * 1000){
         if (bracketExposureLengthMillis > 0){
-          currentBracketShot = UnderExposed
+          currentBracketShot = UnderExposed;
         }
-        setMode(MirrorLockupDelay);
+        setPhase(MirrorLockupDelay);
       }
       break;
-    case:MirrorLockupDelay:
+    case MirrorLockupDelay:
       if (mirrorLockupDelay){
-        if (currentModeStartTime = -1){
-          currentModeStartTime = millis();
+        if (currentPhaseStartTime == -1){
+          currentPhaseStartTime = millis();
           setShutter(HIGH);
         }else{
-          if (millis() - currentModeStartTime < mirrorLockupDuration){
+          if (millis() - currentPhaseStartTime >= mirrorLockupDuration){
             setShutter(LOW);
-          }else{
-            setMode(Exposure);
+            setPhase(MirrorLockupBuffer);
           }
         }
       }else{
-        setMode(Exposure):
+        setPhase(Exposure);
       }
       break;
+    case MirrorLockupBuffer:
+        if (mirrorLockupDuration > 0){
+          if (currentPhaseStartTime == -1){
+            currentPhaseStartTime = millis();
+          }else{
+            if (millis() - currentPhaseStartTime >= mirrorLockupBuffer){
+              setPhase(Exposure);
+            }
+          }
+        }else{
+          setPhase(Exposure);
+        }
+      break;
     case Exposure:
-      if (currentModeStartTime = -1){
-        currentModeStartTime = millis();
+      if (currentPhaseStartTime == -1){
+        currentPhaseStartTime = millis();
         switch (currentBracketShot) {
           case UnderExposed:
             currentBracketExposureDuration = exposureLengthMillis - bracketExposureLengthMillis;
@@ -88,44 +112,44 @@ void loop() {
         }
         setShutter(HIGH);
       }else{
-        if (millis() - currentModeStartTime >= currentBracketExposureDuration){
+        if (millis() - currentPhaseStartTime >= currentBracketExposureDuration){
           setShutter(LOW);
-          setMode(BlackFrameDelay)
+          setPhase(BlackFrameDelay);
         }
       }
       break;
     case BlackFrameDelay:
       if (blackFrameEnabled){
-        if (currentModeStartTime = -1){
-          currentModeStartTime = millis();
+        if (currentPhaseStartTime == -1){
+          currentPhaseStartTime = millis();
         }else{
-          if (millis() - currentModeStartTime >= currentBracketExposureDuration){
-            setMode(Processing);
+          if (millis() - currentPhaseStartTime >= currentBracketExposureDuration){
+            setPhase(Processing);
           }
         }
       }else{
-        setMode(Processing);
+        setPhase(Processing);
       }
       break;
     case Processing:
-      if (currentModeStartTime = -1){
-        currentModeStartTime = millis();
+      if (currentPhaseStartTime == -1){
+        currentPhaseStartTime = millis();
       }else{
-        if (millis() - currentModeStartTime >= processingDuration){
-          if (bracketExposureLengthMillis = 0){
-            setMode(None);
+        if (millis() - currentPhaseStartTime >= processingDuration){
+          if (bracketExposureLengthMillis == 0){
+            setPhase(None);
           }else{
             switch(currentBracketShot){
               case UnderExposed:
                 currentBracketShot = Exposed;
-                setMode(MirrorLockupDelay);
+                setPhase(MirrorLockupDelay);
                 break;
               case Exposed:
                 currentBracketShot = OverExposed;
-                setMode(MirrorLockupDelay);
+                setPhase(MirrorLockupDelay);
                 break;
               case OverExposed:
-                setMode(None);
+                setPhase(None);
                 break;
             }
           }
@@ -133,14 +157,4 @@ void loop() {
       }
       break;
   }
-}
-
-void setMode(value){
-  currentMode = value;
-  currentModeStartTime = -1;
-}
-
-void setShutter(value){
-  digitalWrite(shutterPin, value);
-  digitalWrite(LEDPin, value);
 }
