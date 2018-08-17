@@ -57,13 +57,14 @@ bool debugging(){
   return millis() < debugTimeout;
 }
 
-startDebugging(int duration){
-  debugTimeout = millis() + duration;
+int startDebugging(String duration){
+  debugTimeout = millis() + duration.toFloat();
+  return duration.toFloat();
 }
 
 bool debugMessage(String eventName, String data){
   if (debugging()){
-    Particle.publish(eventName, data);
+    return Particle.publish(eventName, data);
   }
 }
 
@@ -98,7 +99,7 @@ void loop() {
   switch(currentPhase){
     case None:
       if(millis() - lastPhotoStartTime >= photoIntervalSeconds * 1000){
-        debugMessage("NewPhoto");
+        debugMessage("NewPhoto", "");
         lastPhotoStartTime = millis();
         if (bracketExposureLengthMillis > 0){
           currentBracketShot = UnderExposed;
