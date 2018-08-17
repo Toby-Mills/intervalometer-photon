@@ -45,6 +45,47 @@ int processingDuration = 300;
 
 char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 
+//---------------------------------------------------------------
+// Functions
+//---------------------------------------------------------------
+
+void setPhase(PhotoPhase value){
+  currentPhase = value;
+  currentPhaseStartTime = -1;//indicates that the phase has not started yet
+}
+
+bool phaseStarted(){
+  return currentPhaseStartTime > -1;
+}
+
+void startPhase(){
+  currentPhaseStartTime = millis();
+}
+
+int phaseElapsedTime(){
+  return millis() - currentPhaseStartTime;
+}
+
+void setShutter(int value){
+  digitalWrite(shutterPin, value);
+  digitalWrite(LEDPin, value);
+}
+
+bool debugging(){
+  return millis() < debugTimeout;
+}
+
+int startDebugging(String duration){
+  debugTimeout = millis() + duration.toFloat();
+  return duration.toFloat();
+}
+
+bool debugMessage(String eventName, String data){
+  if (debugging()){
+    return Particle.publish(eventName, data);
+  }
+}
+
 //--------------------------------------------------------------
 // Setup
 //--------------------------------------------------------------
@@ -54,7 +95,6 @@ void setup() {
   // Put initialization like pinMode and begin functions here.
   pinMode(shutterPin, OUTPUT);
   pinMode(LEDPin, OUTPUT);
-  setPhase(None);
 }
 
 //--------------------------------------------------------------
@@ -184,46 +224,5 @@ void loop() {
         startPhase();
       }
       break;
-  }
-}
-
-//---------------------------------------------------------------
-// Functions
-//---------------------------------------------------------------
-
-void setPhase(PhotoPhase value){
-  currentPhase = value;
-  currentPhaseStartTime = -1;//indicates that the phase has not started yet
-}
-
-bool phaseStarted(){
-  return currentPhaseStartTime > -1;
-}
-
-void startPhase(){
-  currentPhaseStartTime = millis();
-}
-
-int phaseElapsedTime(){
-  return millis() - currentPhaseStartTime;
-}
-
-void setShutter(int value){
-  digitalWrite(shutterPin, value);
-  digitalWrite(LEDPin, value);
-}
-
-bool debugging(){
-  return millis() < debugTimeout;
-}
-
-int startDebugging(String duration){
-  debugTimeout = millis() + duration.toFloat();
-  return duration.toFloat();
-}
-
-bool debugMessage(String eventName, String data){
-  if (debugging()){
-    return Particle.publish(eventName, data);
   }
 }
