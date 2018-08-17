@@ -138,10 +138,10 @@ void loop() {
           if (phaseElapsedTime() >= mirrorLockupDuration){
             setShutter(LOW);
             setPhase(MirrorLockupBuffer);
-          }else{
+          }
+        }else{
             startPhase();
             setShutter(HIGH);
-          }
         }
       }else{
         setPhase(Exposure);
