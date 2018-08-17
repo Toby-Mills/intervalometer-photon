@@ -18,6 +18,7 @@ int bracketExposureLengthMillis = 0;
 
 // internal variables
 bool connectedOnce = false;
+int debugTimeout = 0;
 enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
 enum PhotoPhase {None = 0, MirrorLockupDelay = 1, MirrorLockupBuffer = 2, Exposure = 3, BlackFrameDelay = 4, Processing = 5};
 PhotoPhase currentPhase = None;
@@ -34,9 +35,35 @@ void setPhase(PhotoPhase value){
   currentPhaseStartTime = -1;//indicates that the phase has not started yet
 }
 
+bool phaseStarted(){
+  return currentPhaseStartTime > -1;
+}
+
+void startPhase(){
+  currentPhaseStartTime = millis();
+}
+
+int phaseElapsedTime(){
+  return millis() - currentPhaseStartTime;
+}
+
 void setShutter(int value){
   digitalWrite(shutterPin, value);
   digitalWrite(LEDPin, value);
+}
+
+bool debugging(){
+  return millis() < debugTimeout;
+}
+
+startDebugging(int duration){
+  debugTimeout = millis() + duration;
+}
+
+bool debugMessage(String eventName, String data){
+  if (debugging()){
+    Particle.publish(eventName, data);
+  }
 }
 
 // setup() runs once, when the device is first turned on.
@@ -62,6 +89,7 @@ void loop() {
       Particle.variable("bracket", bracketExposureLengthMillis);
       Particle.variable("phaseStart", currentPhaseStartTime);
       Particle.variable("phase", currentPhase);
+      Particle.function("startDebug", startDebugging);
       connectedOnce = true;
     }
   }
@@ -69,6 +97,7 @@ void loop() {
   switch(currentPhase){
     case None:
       if(millis() - lastPhotoStartTime >= photoIntervalSeconds * 1000){
+        debugMessage("NewPhoto");
         lastPhotoStartTime = millis();
         if (bracketExposureLengthMillis > 0){
           currentBracketShot = UnderExposed;
