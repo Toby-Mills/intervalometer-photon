@@ -14,11 +14,14 @@ bool blackFrameEnabled = true;
 int exposureLengthMillis = 3000;
 int bracketExposureLengthMillis = 0;
 
+//enums
+enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
+enum PhotoPhase {None = 0, MirrorLockupDelay = 1, MirrorLockupBuffer = 2, Exposure = 3, BlackFrameDelay = 4, Processing = 5};
+
 // internal variables
 bool connectedOnce = false;
 int debugTimeout = 0;
-enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
-enum PhotoPhase {None = 0, MirrorLockupDelay = 1, MirrorLockupBuffer = 2, Exposure = 3, BlackFrameDelay = 4, Processing = 5};
+
 PhotoPhase currentPhase = None;
 int lastPhotoStartTime = 0;
 int currentPhaseStartTime = 0;
