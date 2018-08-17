@@ -77,6 +77,7 @@ bool debugging(){
 
 int startDebugging(String duration){
   debugTimeout = millis() + duration.toFloat();
+  debugMessage("DebugStart","");
   return duration.toFloat();
 }
 
@@ -116,6 +117,8 @@ void loop() {
       Particle.variable("bracket", bracketExposureLengthMillis);
       Particle.variable("phaseStart", currentPhaseStartTime);
       Particle.variable("phase", currentPhase);
+      Particle.variable("lastPhoto", lastPhotoStartTime);
+      Particle.variable("phase", currentPhase);
       Particle.function("startDebug", startDebugging);
       connectedOnce = true;
     }
@@ -124,7 +127,6 @@ void loop() {
   switch(currentPhase){
     case None:
       if(millis() - lastPhotoStartTime >= photoIntervalSeconds * 1000){
-        debugMessage("NewPhoto", "");
         lastPhotoStartTime = millis();
         if (bracketExposureLengthMillis > 0){
           currentBracketShot = UnderExposed;
