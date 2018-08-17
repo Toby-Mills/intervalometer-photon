@@ -1,18 +1,30 @@
+//--------------------------------------------------------------
+// System Configuration
+//--------------------------------------------------------------
 
 SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate thread from the application setup and loop
 //this includes connecting to the network and the cloud
 
-char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
+//--------------------------------------------------------------
+// Pins
+//--------------------------------------------------------------
 
 int shutterPin = D1;
 int LEDPin = D7;
 
-// user settings
+//--------------------------------------------------------------
+// User Settings
+//--------------------------------------------------------------
+
 int photoIntervalSeconds = 15;
 bool mirrorLockupDelay = true;
 bool blackFrameEnabled = true;
 int exposureLengthMillis = 3000;
 int bracketExposureLengthMillis = 0;
+
+//--------------------------------------------------------------
+// Internal Variables
+//--------------------------------------------------------------
 
 //enums
 enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
@@ -31,42 +43,11 @@ int mirrorLockupDuration = 500;
 int mirrorLockupBuffer = 1000;
 int processingDuration = 300;
 
-void setPhase(PhotoPhase value){
-  currentPhase = value;
-  currentPhaseStartTime = -1;//indicates that the phase has not started yet
-}
+char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 
-bool phaseStarted(){
-  return currentPhaseStartTime > -1;
-}
-
-void startPhase(){
-  currentPhaseStartTime = millis();
-}
-
-int phaseElapsedTime(){
-  return millis() - currentPhaseStartTime;
-}
-
-void setShutter(int value){
-  digitalWrite(shutterPin, value);
-  digitalWrite(LEDPin, value);
-}
-
-bool debugging(){
-  return millis() < debugTimeout;
-}
-
-int startDebugging(String duration){
-  debugTimeout = millis() + duration.toFloat();
-  return duration.toFloat();
-}
-
-bool debugMessage(String eventName, String data){
-  if (debugging()){
-    return Particle.publish(eventName, data);
-  }
-}
+//--------------------------------------------------------------
+// Setup
+//--------------------------------------------------------------
 
 // setup() runs once, when the device is first turned on.
 void setup() {
@@ -75,6 +56,10 @@ void setup() {
   pinMode(LEDPin, OUTPUT);
   setPhase(None);
 }
+
+//--------------------------------------------------------------
+// Loop
+//--------------------------------------------------------------
 
 // loop() runs over and over again, as quickly as it can execute.
 void loop() {
@@ -122,6 +107,7 @@ void loop() {
         setPhase(Exposure);
       }
       break;
+
     case MirrorLockupBuffer:
         if (mirrorLockupDuration > 0){
           if (phaseStarted()){
@@ -135,6 +121,7 @@ void loop() {
           setPhase(Exposure);
         }
       break;
+
     case Exposure:
       if (phaseStarted()){
         if (phaseElapsedTime() >= currentBracketExposureDuration){
@@ -157,6 +144,7 @@ void loop() {
         setShutter(HIGH);
       }
       break;
+
     case BlackFrameDelay:
       if (blackFrameEnabled){
         if (phaseStarted()){
@@ -170,6 +158,7 @@ void loop() {
         setPhase(Processing);
       }
       break;
+
     case Processing:
       if (phaseStarted()){
         if (phaseElapsedTime() >= processingDuration){
@@ -195,5 +184,46 @@ void loop() {
         startPhase();
       }
       break;
+  }
+}
+
+//---------------------------------------------------------------
+// Functions
+//---------------------------------------------------------------
+
+void setPhase(PhotoPhase value){
+  currentPhase = value;
+  currentPhaseStartTime = -1;//indicates that the phase has not started yet
+}
+
+bool phaseStarted(){
+  return currentPhaseStartTime > -1;
+}
+
+void startPhase(){
+  currentPhaseStartTime = millis();
+}
+
+int phaseElapsedTime(){
+  return millis() - currentPhaseStartTime;
+}
+
+void setShutter(int value){
+  digitalWrite(shutterPin, value);
+  digitalWrite(LEDPin, value);
+}
+
+bool debugging(){
+  return millis() < debugTimeout;
+}
+
+int startDebugging(String duration){
+  debugTimeout = millis() + duration.toFloat();
+  return duration.toFloat();
+}
+
+bool debugMessage(String eventName, String data){
+  if (debugging()){
+    return Particle.publish(eventName, data);
   }
 }
