@@ -107,13 +107,13 @@ void loop() {
       break;
     case MirrorLockupDelay:
       if (mirrorLockupDelay){
-        if (currentPhaseStartTime == -1){
-          currentPhaseStartTime = millis();
-          setShutter(HIGH);
-        }else{
-          if (millis() - currentPhaseStartTime >= mirrorLockupDuration){
+        if (phaseStarted()){
+          if (phaseElapsedTime() >= mirrorLockupDuration){
             setShutter(LOW);
             setPhase(MirrorLockupBuffer);
+          }else{
+            startPhase();
+            setShutter(HIGH);
           }
         }
       }else{
@@ -122,20 +122,25 @@ void loop() {
       break;
     case MirrorLockupBuffer:
         if (mirrorLockupDuration > 0){
-          if (currentPhaseStartTime == -1){
-            currentPhaseStartTime = millis();
-          }else{
-            if (millis() - currentPhaseStartTime >= mirrorLockupBuffer){
+          if (phaseStarted()){
+            if (phaseElapsedTime() >= mirrorLockupBuffer){
               setPhase(Exposure);
             }
+          }else{
+            startPhase();
           }
         }else{
           setPhase(Exposure);
         }
       break;
     case Exposure:
-      if (currentPhaseStartTime == -1){
-        currentPhaseStartTime = millis();
+      if (phaseStarted()){
+        if (phaseElapsedTime() >= currentBracketExposureDuration){
+          setShutter(LOW);
+          setPhase(BlackFrameDelay);
+        }
+      }else{
+        startPhase();
         switch (currentBracketShot) {
           case UnderExposed:
             currentBracketExposureDuration = exposureLengthMillis - bracketExposureLengthMillis;
@@ -148,31 +153,24 @@ void loop() {
             break;
         }
         setShutter(HIGH);
-      }else{
-        if (millis() - currentPhaseStartTime >= currentBracketExposureDuration){
-          setShutter(LOW);
-          setPhase(BlackFrameDelay);
-        }
       }
       break;
     case BlackFrameDelay:
       if (blackFrameEnabled){
-        if (currentPhaseStartTime == -1){
-          currentPhaseStartTime = millis();
-        }else{
-          if (millis() - currentPhaseStartTime >= currentBracketExposureDuration){
+        if (phaseStarted()){
+          if (phaseElapsedTime() >= currentBracketExposureDuration){
             setPhase(Processing);
           }
+        }else{
+          startPhase();
         }
       }else{
         setPhase(Processing);
       }
       break;
     case Processing:
-      if (currentPhaseStartTime == -1){
-        currentPhaseStartTime = millis();
-      }else{
-        if (millis() - currentPhaseStartTime >= processingDuration){
+      if (phaseStarted()){
+        if (phaseElapsedTime() >= processingDuration){
           if (bracketExposureLengthMillis == 0){
             setPhase(None);
           }else{
@@ -191,6 +189,8 @@ void loop() {
             }
           }
         }
+      }else{
+        startPhase();
       }
       break;
   }
