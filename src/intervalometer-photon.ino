@@ -1,9 +1,7 @@
-/*
- * Project intervalometer-photon
- * Description:
- * Author:
- * Date:
- */
+
+SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate thread from the application setup and loop
+//this includes connecting to the network and the cloud
+
 char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 
 int shutterPin = D1;
