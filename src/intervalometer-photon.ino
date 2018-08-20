@@ -11,6 +11,7 @@ SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate threa
 
 int shutterPin = D1;
 int LEDPin = D7;
+int switchPin = D2;
 
 //--------------------------------------------------------------
 // User Settings
@@ -21,6 +22,7 @@ bool mirrorLockupDelay = true;
 bool blackFrameEnabled = true;
 int exposureLengthMillis = 3000;
 int bracketExposureLengthMillis = 0;
+bool started = false;
 
 //--------------------------------------------------------------
 // Internal Variables
@@ -48,6 +50,15 @@ char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 //---------------------------------------------------------------
 // Functions
 //---------------------------------------------------------------
+
+void start(){
+  started = true;
+}
+
+void end(){
+  started = false;
+  setShutter(LOW);
+}
 
 void setPhase(PhotoPhase value){
   currentPhase = value;
@@ -96,6 +107,7 @@ void setup() {
   // Put initialization like pinMode and begin functions here.
   pinMode(shutterPin, OUTPUT);
   pinMode(LEDPin, OUTPUT);
+  pinMode(switchPin, INPUT_PULLUP);
 }
 
 //--------------------------------------------------------------
@@ -123,108 +135,115 @@ void loop() {
       connectedOnce = true;
     }
   }
+  if(digitalRead(switchPin) == HIGH){
+    start();
+  }else{
+    end();
+  }
 
-  switch(currentPhase){
-    case None:
-      if(millis() - lastPhotoStartTime >= photoIntervalSeconds * 1000){
-        lastPhotoStartTime = millis();
-        if (bracketExposureLengthMillis > 0){
-          currentBracketShot = UnderExposed;
-        }
-        setPhase(MirrorLockupDelay);
-      }
-      break;
-    case MirrorLockupDelay:
-      if (mirrorLockupDelay){
-        if (phaseStarted()){
-          if (phaseElapsedTime() >= mirrorLockupDuration){
-            setShutter(LOW);
-            setPhase(MirrorLockupBuffer);
+  if(started){
+    switch(currentPhase){
+      case None:
+        if(millis() - lastPhotoStartTime >= photoIntervalSeconds * 1000){
+          lastPhotoStartTime = millis();
+          if (bracketExposureLengthMillis > 0){
+            currentBracketShot = UnderExposed;
           }
-        }else{
-            startPhase();
-            setShutter(HIGH);
+          setPhase(MirrorLockupDelay);
         }
-      }else{
-        setPhase(Exposure);
-      }
-      break;
-
-    case MirrorLockupBuffer:
-        if (mirrorLockupDuration > 0){
+        break;
+      case MirrorLockupDelay:
+        if (mirrorLockupDelay){
           if (phaseStarted()){
-            if (phaseElapsedTime() >= mirrorLockupBuffer){
-              setPhase(Exposure);
+            if (phaseElapsedTime() >= mirrorLockupDuration){
+              setShutter(LOW);
+              setPhase(MirrorLockupBuffer);
             }
           }else{
-            startPhase();
+              startPhase();
+              setShutter(HIGH);
           }
         }else{
           setPhase(Exposure);
         }
-      break;
+        break;
 
-    case Exposure:
-      if (phaseStarted()){
-        if (phaseElapsedTime() >= currentBracketExposureDuration){
-          setShutter(LOW);
-          setPhase(BlackFrameDelay);
-        }
-      }else{
-        startPhase();
-        switch (currentBracketShot) {
-          case UnderExposed:
-            currentBracketExposureDuration = exposureLengthMillis - bracketExposureLengthMillis;
-            break;
-          case Exposed:
-            currentBracketExposureDuration = exposureLengthMillis;
-            break;
-          case OverExposed:
-            currentBracketExposureDuration = exposureLengthMillis + bracketExposureLengthMillis;
-            break;
-        }
-        setShutter(HIGH);
-      }
-      break;
+      case MirrorLockupBuffer:
+          if (mirrorLockupDuration > 0){
+            if (phaseStarted()){
+              if (phaseElapsedTime() >= mirrorLockupBuffer){
+                setPhase(Exposure);
+              }
+            }else{
+              startPhase();
+            }
+          }else{
+            setPhase(Exposure);
+          }
+        break;
 
-    case BlackFrameDelay:
-      if (blackFrameEnabled){
+      case Exposure:
         if (phaseStarted()){
           if (phaseElapsedTime() >= currentBracketExposureDuration){
-            setPhase(Processing);
+            setShutter(LOW);
+            setPhase(BlackFrameDelay);
+          }
+        }else{
+          startPhase();
+          switch (currentBracketShot) {
+            case UnderExposed:
+              currentBracketExposureDuration = exposureLengthMillis - bracketExposureLengthMillis;
+              break;
+            case Exposed:
+              currentBracketExposureDuration = exposureLengthMillis;
+              break;
+            case OverExposed:
+              currentBracketExposureDuration = exposureLengthMillis + bracketExposureLengthMillis;
+              break;
+          }
+          setShutter(HIGH);
+        }
+        break;
+
+      case BlackFrameDelay:
+        if (blackFrameEnabled){
+          if (phaseStarted()){
+            if (phaseElapsedTime() >= currentBracketExposureDuration){
+              setPhase(Processing);
+            }
+          }else{
+            startPhase();
+          }
+        }else{
+          setPhase(Processing);
+        }
+        break;
+
+      case Processing:
+        if (phaseStarted()){
+          if (phaseElapsedTime() >= processingDuration){
+            if (bracketExposureLengthMillis == 0){
+              setPhase(None);
+            }else{
+              switch(currentBracketShot){
+                case UnderExposed:
+                  currentBracketShot = Exposed;
+                  setPhase(MirrorLockupDelay);
+                  break;
+                case Exposed:
+                  currentBracketShot = OverExposed;
+                  setPhase(MirrorLockupDelay);
+                  break;
+                case OverExposed:
+                  setPhase(None);
+                  break;
+              }
+            }
           }
         }else{
           startPhase();
         }
-      }else{
-        setPhase(Processing);
-      }
-      break;
-
-    case Processing:
-      if (phaseStarted()){
-        if (phaseElapsedTime() >= processingDuration){
-          if (bracketExposureLengthMillis == 0){
-            setPhase(None);
-          }else{
-            switch(currentBracketShot){
-              case UnderExposed:
-                currentBracketShot = Exposed;
-                setPhase(MirrorLockupDelay);
-                break;
-              case Exposed:
-                currentBracketShot = OverExposed;
-                setPhase(MirrorLockupDelay);
-                break;
-              case OverExposed:
-                setPhase(None);
-                break;
-            }
-          }
-        }
-      }else{
-        startPhase();
-      }
-      break;
+        break;
+    }
   }
 }

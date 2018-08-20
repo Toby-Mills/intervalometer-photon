@@ -83,7 +83,7 @@ U 1 1 5B71473E
 P 7650 3000
 F 0 "J3" H 7650 3100 50  0000 C CNN
 F 1 "Conn_01x02" H 7650 2800 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Angled_1x02_Pitch2.54mm" H 7650 3000 50  0001 C CNN
+F 2 "Connectors_Terminal_Blocks:TerminalBlock_bornier-2_P5.08mm" H 7650 3000 50  0001 C CNN
 F 3 "" H 7650 3000 50  0001 C CNN
 	1    7650 3000
 	1    0    0    -1  
