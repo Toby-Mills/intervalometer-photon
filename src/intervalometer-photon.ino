@@ -11,7 +11,7 @@ SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate threa
 
 int shutterPin = D1;
 int LEDPin = D7;
-int switchPin = D2;
+int switchPin = D6;
 
 //--------------------------------------------------------------
 // User Settings
@@ -80,6 +80,7 @@ int phaseElapsedTime(){
 void setShutter(int value){
   digitalWrite(shutterPin, value);
   digitalWrite(LEDPin, value);
+
 }
 
 bool debugging(){
@@ -107,7 +108,7 @@ void setup() {
   // Put initialization like pinMode and begin functions here.
   pinMode(shutterPin, OUTPUT);
   pinMode(LEDPin, OUTPUT);
-  pinMode(switchPin, INPUT_PULLUP);
+  pinMode(switchPin, INPUT_PULLDOWN);
 }
 
 //--------------------------------------------------------------
