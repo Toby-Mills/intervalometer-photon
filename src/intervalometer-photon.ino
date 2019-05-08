@@ -17,10 +17,10 @@ int switchPin = D6;
 // User Settings
 //--------------------------------------------------------------
 
-int photoIntervalSeconds = 15;
+int photoIntervalSeconds = 30;
 bool mirrorLockupDelay = true;
 bool blackFrameEnabled = true;
-int exposureLengthMillis = 3000;
+int exposureLengthMillis = 10000;
 int bracketExposureLengthMillis = 0;
 bool started = false;
 
@@ -52,6 +52,7 @@ char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 //---------------------------------------------------------------
 
 void start(){
+  debugMessage("start", "");
   started = true;
 }
 
@@ -61,6 +62,7 @@ void end(){
 }
 
 void setPhase(PhotoPhase value){
+  debugMessage("set phase", "");
   currentPhase = value;
   currentPhaseStartTime = -1;//indicates that the phase has not started yet
 }
