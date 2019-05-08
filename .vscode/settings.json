@@ -1,0 +1,4 @@
+{
+    "particle.firmwareVersion": "1.0.1",
+    "cortex-debug.openocdPath": "C:\\Users\\tmills\\.particle\\toolchains\\openocd\\0.10.0-particle.1\\bin\\openocd.exe"
+}
