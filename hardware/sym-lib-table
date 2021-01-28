@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name intervalometer-photon-rescue)(type Legacy)(uri ${KIPRJMOD}/intervalometer-photon-rescue.lib)(options "")(descr ""))
+  (lib (name particle)(type Legacy)(uri "C:/Personal/Dropbox/Toby/Electronics/Particle Photon KiCad Schematics/particle.lib")(options "")(descr ""))
+)

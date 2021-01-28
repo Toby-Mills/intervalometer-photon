@@ -1,6 +1,39 @@
-EESchema Schematic File Version 4
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:switches
+LIBS:relays
+LIBS:motors
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:particle
 LIBS:intervalometer-photon-cache
-EELAYER 29 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -19,7 +52,7 @@ GND
 Text GLabel 5300 3650 2    60   Input ~ 0
 OPTO
 $Comp
-L intervalometer-photon-rescue:LTV-827 U1
+L LTV-827 U1
 U 1 1 5B713F81
 P 6950 3250
 F 0 "U1" H 6750 3650 50  0000 L CNN
@@ -34,7 +67,7 @@ GND
 Text GLabel 6100 2950 0    60   Input ~ 0
 OPTO
 $Comp
-L Device:LED D1
+L LED D1
 U 1 1 5B7142C4
 P 6400 3200
 F 0 "D1" H 6400 3300 50  0000 C CNN
@@ -45,7 +78,7 @@ F 3 "" H 6400 3200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L intervalometer-photon-rescue:Conn_01x02 J3
+L Conn_01x02 J3
 U 1 1 5B71473E
 P 7650 3000
 F 0 "J3" H 7650 3100 50  0000 C CNN
@@ -80,7 +113,7 @@ Wire Wire Line
 Wire Wire Line
 	6250 2950 6250 2900
 $Comp
-L Device:R R1
+L R R1
 U 1 1 5B71D1EF
 P 6400 2900
 F 0 "R1" V 6480 2900 50  0000 C CNN
@@ -91,7 +124,7 @@ F 3 "" H 6400 2900 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L particle:Photon U2
+L Photon U2
 U 1 1 5B729424
 P 4750 3550
 F 0 "U2" H 4550 4500 60  0000 C CNN
@@ -102,7 +135,7 @@ F 3 "" H 5300 4600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L intervalometer-photon-rescue:SW_DIP_x01 SW1
+L SW_DIP_x01 SW1
 U 1 1 5B729AF1
 P 5850 4200
 F 0 "SW1" H 5850 4350 50  0000 C CNN
