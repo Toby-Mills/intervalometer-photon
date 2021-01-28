@@ -1,9 +1,11 @@
+#include "blynk.h"
 //--------------------------------------------------------------
 // System Configuration
 //--------------------------------------------------------------
 
 SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate thread from the application setup and loop
 //this includes connecting to the network and the cloud
+char auth[] = "MVLg3WPX9yQrvIoQAIy0o5fZLSEKQGm4";//Blynk auth code for Blynk UI access
 
 //--------------------------------------------------------------
 // Pins
@@ -12,6 +14,18 @@ SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate threa
 int shutterPin = D1;
 int LEDPin = D7;
 int switchPin = D6;
+
+//--------------------------------------------------------------
+// Blynk Pins
+//--------------------------------------------------------------
+
+int blynkPinMessage = 0;
+int blynkPinStart = 1;
+int blynkPinInterval = 2;
+int blynkPinExposure = 3;
+int blynkPinMirrorLockup = 4;
+int blynkPinBlackFrame = 5;
+int blynkPinBracketExposure = 6;
 
 //--------------------------------------------------------------
 // User Settings
@@ -52,7 +66,6 @@ char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 //---------------------------------------------------------------
 
 void start(){
-  debugMessage("start", "");
   started = true;
 }
 
@@ -62,9 +75,11 @@ void end(){
 }
 
 void setPhase(PhotoPhase value){
-  debugMessage("set phase", "");
+  //char msg [50];
+  //sprintf(msg, "set phase %d", value);
+  //debugMessage("set phase", msg);
   currentPhase = value;
-  currentPhaseStartTime = -1;//indicates that the phase has not started yet
+  currentPhaseStartTime = -1; //indicates that the phase has not started yet
 }
 
 bool phaseStarted(){
@@ -82,7 +97,6 @@ int phaseElapsedTime(){
 void setShutter(int value){
   digitalWrite(shutterPin, value);
   digitalWrite(LEDPin, value);
-
 }
 
 bool debugging(){
@@ -93,6 +107,11 @@ int startDebugging(String duration){
   debugTimeout = millis() + duration.toFloat();
   debugMessage("DebugStart","");
   return duration.toFloat();
+}
+
+bool userMessage(String message){
+  return Particle.publish("message", message);
+  Blynk.virtualWrite(0, message);
 }
 
 bool debugMessage(String eventName, String data){
@@ -111,6 +130,21 @@ void setup() {
   pinMode(shutterPin, OUTPUT);
   pinMode(LEDPin, OUTPUT);
   pinMode(switchPin, INPUT_PULLDOWN);
+  
+  Particle.variable("sourceCode", sourceCode, STRING);
+  Particle.variable("interval", photoIntervalSeconds);
+  Particle.variable("lockup", mirrorLockupDelay);
+  Particle.variable("blackFrame", blackFrameEnabled);
+  Particle.variable("exposure", exposureLengthMillis);
+  Particle.variable("bracket", bracketExposureLengthMillis);
+  Particle.variable("phaseStart", currentPhaseStartTime);
+  Particle.variable("phase", currentPhase);
+  Particle.variable("lastPhoto", lastPhotoStartTime);
+  Particle.variable("phase", currentPhase);
+  Particle.function("startDebug", startDebugging);
+
+  Blynk.begin(auth); //Create connection to Blynk Cloud
+  updateBlynkPins(); //update Blynk variables
 }
 
 //--------------------------------------------------------------
@@ -119,30 +153,13 @@ void setup() {
 
 // loop() runs over and over again, as quickly as it can execute.
 void loop() {
+  Blynk.run(); //read / write Blynk pins
 
-  //code to register cloud functions once the particle is connected
-  if (connectedOnce == false) {
-    if (Particle.connected()) {
-      //Register variables and methods to allow control via Particle Cloud
-      Particle.variable("sourceCode", sourceCode, STRING);
-      Particle.variable("interval", photoIntervalSeconds);
-      Particle.variable("lockup", mirrorLockupDelay);
-      Particle.variable("blackFrame", blackFrameEnabled);
-      Particle.variable("exposure", exposureLengthMillis);
-      Particle.variable("bracket", bracketExposureLengthMillis);
-      Particle.variable("phaseStart", currentPhaseStartTime);
-      Particle.variable("phase", currentPhase);
-      Particle.variable("lastPhoto", lastPhotoStartTime);
-      Particle.variable("phase", currentPhase);
-      Particle.function("startDebug", startDebugging);
-      connectedOnce = true;
-    }
-  }
-  if(digitalRead(switchPin) == HIGH){
-    start();
-  }else{
-    end();
-  }
+  //if(digitalRead(switchPin) == HIGH){
+  //  start();
+  //}else{
+  //  end();
+  //}
 
   if(started){
     switch(currentPhase){
@@ -249,4 +266,72 @@ void loop() {
         break;
     }
   }
+}
+
+//--------------------------------------------------------------
+// Blynk methods
+//--------------------------------------------------------------
+
+BLYNK_WRITE(V1)
+{
+  int pinValue = param.asInt();
+  char value[] = "";
+  sprintf(value, "%d", pinValue);
+  debugMessage("BlynkSetStart", value);
+  if (pinValue == 1){start();};
+  if (pinValue == 0){end();};
+}
+BLYNK_WRITE(V2)
+{
+  int pinValue = param.asInt();
+  char value[] = "";
+  sprintf(value, "%d", pinValue);
+  debugMessage("BlynkSetInterval", value);
+  photoIntervalSeconds = pinValue;
+}
+BLYNK_WRITE(V3)
+{
+  float pinValue = param.asFloat();
+  char value[] = "";
+  sprintf(value,"%f", pinValue);
+  debugMessage("BlynkSetExposure", value);
+  exposureLengthMillis = pinValue * 1000;
+}
+BLYNK_WRITE(V4)
+{
+  int pinValue = param.asInt();
+  char value[] = "";
+  sprintf(value, "%d", pinValue);
+  debugMessage("BlynkSetLockup", value);
+  mirrorLockupDelay = (pinValue == 1);
+}
+BLYNK_WRITE(V5)
+{
+  int pinValue = param.asInt();
+  char value[] = "";
+  sprintf(value, "%d", pinValue);
+  debugMessage("BlynkSetBlackFrame", value);
+  blackFrameEnabled = (pinValue == 1);
+}
+BLYNK_WRITE(V6)
+{
+  float pinValue = param.asFloat();
+  char value[] = "";
+  sprintf(value,"%f", pinValue);
+  debugMessage("BlynkSetBracket", value);
+  bracketExposureLengthMillis = pinValue * 1000;
+}
+
+void updateBlynkPins(){
+  int blynkPinInterval = 2;
+  if(started){
+    Blynk.virtualWrite(blynkPinStart, 1);
+  }else{
+    Blynk.virtualWrite(blynkPinStart,0);
+  }
+  Blynk.virtualWrite(blynkPinInterval, photoIntervalSeconds);
+  Blynk.virtualWrite(blynkPinExposure, exposureLengthMillis / 1000);
+  Blynk.virtualWrite(blynkPinMirrorLockup, (mirrorLockupDelay == true));
+  Blynk.virtualWrite(blynkPinBlackFrame, (blackFrameEnabled == true));
+  Blynk.virtualWrite(blynkPinBracketExposure, bracketExposureLengthMillis / 1000);
 }
