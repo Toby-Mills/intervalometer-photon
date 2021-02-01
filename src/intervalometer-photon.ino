@@ -1,16 +1,14 @@
+#include "config.h" //add your own config.h with: char const blynkToken[] = "your-blynk-token-here";
 #include "blynk.h"
 //--------------------------------------------------------------
 // System Configuration
 //--------------------------------------------------------------
-
 SYSTEM_THREAD(ENABLED); //enables system functions to happen in a separate thread from the application setup and loop
 //this includes connecting to the network and the cloud
-char auth[] = "MVLg3WPX9yQrvIoQAIy0o5fZLSEKQGm4";//Blynk auth code for Blynk UI access
 
 //--------------------------------------------------------------
 // Pins
 //--------------------------------------------------------------
-
 int shutterPin = D1;
 int LEDPin = D7;
 int switchPin = D6;
@@ -18,7 +16,6 @@ int switchPin = D6;
 //--------------------------------------------------------------
 // Blynk Pins
 //--------------------------------------------------------------
-
 int blynkPinMessage = 0;
 int blynkPinStart = 1;
 int blynkPinInterval = 2;
@@ -30,7 +27,6 @@ int blynkPinBracketExposure = 6;
 //--------------------------------------------------------------
 // User Settings
 //--------------------------------------------------------------
-
 int photoIntervalSeconds = 30;
 bool mirrorLockupDelay = true;
 bool blackFrameEnabled = true;
@@ -41,7 +37,6 @@ bool started = false;
 //--------------------------------------------------------------
 // Internal Variables
 //--------------------------------------------------------------
-
 //enums
 enum ExposureBracketShot {UnderExposed, Exposed, OverExposed};
 enum PhotoPhase {None = 0, MirrorLockupDelay = 1, MirrorLockupBuffer = 2, Exposure = 3, BlackFrameDelay = 4, Processing = 5};
@@ -64,7 +59,6 @@ char *sourceCode =  "https://github.com/Toby-Mills/intervalometer-photon";
 //---------------------------------------------------------------
 // Functions
 //---------------------------------------------------------------
-
 void start(){
   started = true;
 }
@@ -143,7 +137,7 @@ void setup() {
   Particle.variable("phase", currentPhase);
   Particle.function("startDebug", startDebugging);
 
-  Blynk.begin(auth); //Create connection to Blynk Cloud
+  Blynk.begin(blynkToken); //Create connection to Blynk Cloud
   updateBlynkPins(); //update Blynk variables
 }
 
